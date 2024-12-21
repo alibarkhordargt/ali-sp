@@ -1,4 +1,4 @@
-export enum UseCases {
+export enum PdfUseCases {
   Download = 'download',
-  Blob = 'getBlob',
+  Base64 = 'base64',
 }

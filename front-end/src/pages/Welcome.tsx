@@ -1,49 +1,40 @@
-// src/pages/WelcomePage.tsx
-import React from "react";
-import { Container, Button, Typography, Box } from "@mui/material";
-import { useNavigate } from "react-router-dom";
+import { FC } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Button, Typography, Box } from '@mui/material';
+import PageWrapper from '../components/PageWrapper';
 
-const WelcomePage: React.FC = () => {
+const WelcomePage: FC = () => {
   const navigate = useNavigate();
 
   const handleStartClick = () => {
-    navigate("/form");
+    navigate('/form');
   };
 
   return (
-    <Container
-      maxWidth="xs"
-      sx={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        height: "100vh",
-        backgroundColor: "#f5f5f5",
-      }}
-    >
-      <Typography variant="h4" component="h1" sx={{ marginBottom: 2 }}>
-        Welcome to Emzagar
+    <PageWrapper welcomePage={true}>
+      <Typography variant="h4" component="h1" sx={{ marginBottom: 4 }}>
+        Welcome to Ali SP
       </Typography>
-      <Box sx={{ display: "flex", justifyContent: "center" }}>
+      <Box sx={{ display: 'flex', justifyContent: 'center' }}>
         <Button
           variant="contained"
           onClick={handleStartClick}
           sx={{
-            backgroundColor: "#66bb6a",
-            color: "white",
-            fontSize: "1.2rem",
-            padding: "12px 24px",
-            borderRadius: "16px",
-            "&:hover": {
-              backgroundColor: "#4caf50",
+            backgroundColor: 'primary.main',
+            color: 'white',
+            fontSize: '1.2rem',
+            padding: '12px 24px',
+            borderRadius: '16px',
+            textTransform: 'none',
+            '&:hover': {
+              backgroundColor: 'primary.dark',
             },
           }}
         >
           Start
         </Button>
       </Box>
-    </Container>
+    </PageWrapper>
   );
 };
 

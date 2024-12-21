@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import { forwardRef, ReactElement, Ref, useState, FC } from 'react';
+import { useLocation } from 'react-router-dom';
 import {
   Box,
   Table,
@@ -14,92 +15,74 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  Container,
   Slide,
 } from '@mui/material';
-
-import { useLocation } from 'react-router-dom';
-import BackButton from '../components/BackButton';
-import {
-  SaveAlt,
-  PictureAsPdf,
-  Description,
-  BorderRight,
-  BorderRightSharp,
-} from '@mui/icons-material'; // Icons for PDF and Excel
+import { PictureAsPdf, Description } from '@mui/icons-material'; // Icons for PDF and Excel
 import { TransitionProps } from '@mui/material/transitions';
-import generatePdfFile from '../utils/generatePdfFile';
-import generateExcelFile from '../utils/generateExcelFile';
-import { useUploadFileMutation } from '../services/apiSlice';
-import { UseCases } from '../types/enums';
+import generatePdf from '../utils/generatePdf';
+import generateExcel from '../utils/generateExcel';
+import { useSendUnsignedDocMutation } from '../services/sendUnsignedDocApi';
+import PageWrapper from '../components/PageWrapper';
+import { PdfUseCases } from '../types/enums';
+import { SignerInf, UploadDocDto } from '../types/interfaces';
+import { sendUnsignedDocResDto } from '../types/dtos';
 
-const Transition = React.forwardRef(function Transition(
+const DialogTransition = forwardRef(function Transition(
   props: TransitionProps & {
-    children: React.ReactElement<any, any>;
+    children: ReactElement<any, any>;
   },
-  ref: React.Ref<unknown>,
+  ref: Ref<unknown>,
 ) {
   return <Slide direction="up" ref={ref} {...props} />;
 });
 
-const SignPage = () => {
+const SignPage: FC = () => {
   const [openModal, setOpenModal] = useState(false);
+  const location = useLocation();
+  const [sendUnsignedDoc] = useSendUnsignedDocMutation();
 
-  const { state } = useLocation() || {};
-  const formData = state;
+  const signerInf: SignerInf = location.state;
 
-  const [uploadFile] = useUploadFileMutation();
+  const preHandleSign = () => {
+    setOpenModal(false);
+    setTimeout(handleSign, 100);
+  };
 
   const handleSign = async () => {
-    try {
-      const pdfFile = generatePdfFile(formData, UseCases.Blob) as Blob; // Generate the Blob
+    const docBase64 = generatePdf(PdfUseCases.Base64, signerInf, null);
 
-      const fileData = new FormData();
-      fileData.append('file', pdfFile, 'signer_info.pdf'); // Append Blob to FormData
+    const uploadDocBodyParams: UploadDocDto = {
+      doc: docBase64,
+      nationalId: signerInf.nationalId,
+      phoneNumber: signerInf.phoneNumber,
+    };
 
-      await uploadFile(fileData).unwrap(); // Upload the file using RTK Query
-      console.log('pdfFile:', pdfFile);
+    const { gatewayLink }: sendUnsignedDocResDto = await sendUnsignedDoc(
+      uploadDocBodyParams,
+    ).unwrap();
+    window.location.href = gatewayLink;
 
-      alert('File signed and submitted successfully!');
-    } catch (error) {
-      console.error('Error signing file:', error);
-      alert('An error occurred while submitting the file.');
-    } finally {
-      setOpenModal(false);
-    }
+    setOpenModal(false);
   };
 
   const handleDownloadPdf = () => {
-    generatePdfFile(formData, UseCases.Download);
-    console.log('Downloading PDF');
+    generatePdf(PdfUseCases.Download, signerInf, null);
   };
 
   const handleDownloadExcel = () => {
-    generateExcelFile(formData);
-    console.log('Downloading Excel');
+    generateExcel(signerInf);
   };
 
   const handleOpenModal = () => {
-    setOpenModal(true); // Open the confirmation modal
+    setOpenModal(true);
   };
 
   const handleCloseModal = () => {
-    setOpenModal(false); // Close the modal without signing
+    setOpenModal(false);
   };
 
   return (
-    <Container
-      maxWidth="sm"
-      sx={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        height: '100vh',
-        backgroundColor: '#f5f5f5',
-      }}
-    >
-      <BackButton /> {/* Place the BackButton here */}
+    <PageWrapper>
       <Typography variant="h4" component="h1" sx={{ marginBottom: 2 }}>
         Signer Information
       </Typography>
@@ -107,39 +90,39 @@ const SignPage = () => {
         <Button
           variant="contained"
           sx={{
-            backgroundColor: '#ff4537',
+            backgroundColor: 'downloadPdfButton.main',
             color: 'white',
-            '&:hover': { backgroundColor: '#e10000' }, // Slightly darker red on hover
-            padding: '6px 12px', // Smaller size
-            fontSize: '14px', // Smaller font size
+            '&:hover': { backgroundColor: 'downloadPdfButton.dark' },
+            padding: '6px 12px',
+            fontSize: '14px',
             display: 'flex',
             alignItems: 'center',
+            textTransform: 'none',
           }}
           onClick={handleDownloadPdf}
         >
-          <PictureAsPdf sx={{ marginRight: 1, fontSize: '18px' }} />{' '}
-          {/* Smaller icon */}
+          <PictureAsPdf sx={{ marginRight: 1, fontSize: '18px' }} />
           Download PDF
         </Button>
         <Button
           variant="contained"
           sx={{
-            backgroundColor: '#197141',
+            backgroundColor: 'downloadExcelButton.main',
             color: 'white',
-            '&:hover': { backgroundColor: '#145c33' }, // Slightly darker green on hover
-            padding: '6px 12px', // Smaller size
-            fontSize: '14px', // Smaller font size
+            '&:hover': { backgroundColor: 'downloadExcelButton.dark' },
+            padding: '6px 12px',
+            fontSize: '14px',
             display: 'flex',
             alignItems: 'center',
+            textTransform: 'none',
           }}
           onClick={handleDownloadExcel}
         >
-          <Description sx={{ marginRight: 1, fontSize: '18px' }} />{' '}
-          {/* Smaller icon */}
+          <Description sx={{ marginRight: 1, fontSize: '18px' }} />
           Download Excel
         </Button>
       </Box>
-      {formData && (
+      {signerInf && (
         <TableContainer
           component={Paper}
           sx={{ width: '100%', maxWidth: 600, marginTop: 4, marginBottom: 12 }}
@@ -149,7 +132,7 @@ const SignPage = () => {
               <TableRow>
                 <TableCell
                   sx={{
-                    backgroundColor: '#66bb6a',
+                    backgroundColor: 'primary.main',
                     color: 'white',
                     fontWeight: 'bold',
                   }}
@@ -158,7 +141,7 @@ const SignPage = () => {
                 </TableCell>
                 <TableCell
                   sx={{
-                    backgroundColor: '#66bb6a',
+                    backgroundColor: 'primary.main',
                     color: 'white',
                     fontWeight: 'bold',
                   }}
@@ -167,7 +150,7 @@ const SignPage = () => {
                 </TableCell>
                 <TableCell
                   sx={{
-                    backgroundColor: '#66bb6a',
+                    backgroundColor: 'primary.main',
                     color: 'white',
                     fontWeight: 'bold',
                   }}
@@ -176,21 +159,31 @@ const SignPage = () => {
                 </TableCell>
                 <TableCell
                   sx={{
-                    backgroundColor: '#66bb6a',
+                    backgroundColor: 'primary.main',
                     color: 'white',
                     fontWeight: 'bold',
                   }}
                 >
                   Phone Number
                 </TableCell>
+                <TableCell
+                  sx={{
+                    backgroundColor: 'primary.main',
+                    color: 'white',
+                    fontWeight: 'bold',
+                  }}
+                >
+                  National Id
+                </TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               <TableRow>
-                <TableCell>{formData.firstName}</TableCell>
-                <TableCell>{formData.lastName}</TableCell>
-                <TableCell>{formData.age}</TableCell>
-                <TableCell>{formData.phoneNumber}</TableCell>
+                <TableCell>{signerInf.firstName}</TableCell>
+                <TableCell>{signerInf.lastName}</TableCell>
+                <TableCell>{signerInf.age}</TableCell>
+                <TableCell>{signerInf.phoneNumber}</TableCell>
+                <TableCell>{signerInf.nationalId}</TableCell>
               </TableRow>
             </TableBody>
           </Table>
@@ -201,14 +194,14 @@ const SignPage = () => {
         variant="contained"
         sx={{
           marginTop: 2,
-          backgroundColor: '#66bb6a', // Green background
+          backgroundColor: 'primary.main',
           color: 'white',
-          fontSize: '1rem', // Smaller font size
-          padding: '10px 20px', // Smaller padding
+          fontSize: '1rem',
+          padding: '10px 20px',
           borderRadius: '16px',
-          width: '60%', // Full width
+          width: '60%',
           '&:hover': {
-            backgroundColor: '#4caf50', // Darker green on hover
+            backgroundColor: 'primary.dark',
           },
         }}
         onClick={handleOpenModal}
@@ -217,13 +210,11 @@ const SignPage = () => {
       </Button>
       <Dialog
         maxWidth="xl"
-        TransitionComponent={Transition}
+        TransitionComponent={DialogTransition}
         open={openModal}
         onClose={handleCloseModal}
         PaperProps={{ sx: { borderRadius: '16px' } }}
       >
-        {' '}
-        {/* Apply border radius here */}
         <DialogTitle variant="h5">Confirm & Sign!</DialogTitle>
         <DialogContent>
           <Typography variant="h6">
@@ -234,50 +225,33 @@ const SignPage = () => {
           <Button
             onClick={handleCloseModal}
             sx={{
-              padding: '8px 16px', // Bigger button size
-              fontSize: '16px', // Bigger font size
+              padding: '6px 12px',
+              fontSize: '15px',
               borderRadius: '12px',
-              backgroundColor: '#f5f5f5', // Gray background to match page bg
+              backgroundColor: 'background.default',
               color: 'black',
-              '&:hover': { backgroundColor: '#e0e0e0' }, // Darker gray on hover
+              '&:hover': { backgroundColor: 'grey.500' },
             }}
           >
             Cancel
           </Button>
           <Button
-            onClick={handleSign}
+            onClick={preHandleSign}
             sx={{
-              padding: '8px 16px', // Bigger button size
-              fontSize: '16px', // Bigger font size
+              padding: '6px 12px',
+              fontSize: '15px',
               borderRadius: '12px',
-              backgroundColor: '#66bb6a', // Green background for the "Sign" button
+              backgroundColor: 'primary.main',
               color: 'white',
-              '&:hover': { backgroundColor: '#4caf50' }, // Slightly darker green on hover
+              textTransform: 'none',
+              '&:hover': { backgroundColor: 'primary.dark' },
             }}
           >
             Sign
           </Button>
         </DialogActions>
       </Dialog>
-    </Container>
-
-    // <Box
-    //   sx={{
-    //     display: "flex",
-    //     flexDirection: "column",
-    //     alignItems: "center",
-    //     gap: 2,
-    //     padding: 2,
-    //   }}
-    // >
-    //   {/* Title */}
-    //   <Typography variant="h4" sx={{ fontWeight: "bold", textAlign: "center" }}>
-    //     Signer Information
-    //   </Typography>
-
-    //   {/* Table */}
-
-    // </Box>
+    </PageWrapper>
   );
 };
 
