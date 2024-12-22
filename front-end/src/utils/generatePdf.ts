@@ -5,23 +5,10 @@ import { SignerInf } from '../types/interfaces';
 
 const generatePdf = (
   PdfUseCase: PdfUseCases,
-  signerInf: SignerInf | null,
-  docBase64: string | null,
+  signerInf: SignerInf,
 ): string | void => {
   const doc = new jsPDF();
 
-  if (!signerInf) {
-    if (docBase64) {
-      if (PdfUseCase === PdfUseCases.Download) {
-        doc.addImage(docBase64, 'JPEG', 15, 40, 180, 160);
-        doc.save('signed-document.pdf');
-      }
-
-      return;
-    }
-
-    return;
-  }
   const tableHeads = [
     'First Name',
     'Last Name',
@@ -55,7 +42,7 @@ const generatePdf = (
   if (PdfUseCase === PdfUseCases.Base64) {
     return doc.output('dataurlstring');
   } else if (PdfUseCase === PdfUseCases.Download) {
-    doc.save('signer-information.pdf');
+    doc.save('unsigned-document.pdf');
   }
 };
 

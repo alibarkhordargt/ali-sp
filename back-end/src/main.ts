@@ -10,9 +10,9 @@ const bootstrap = async () => {
 
   app.useGlobalPipes(new ValidationPipe());
   app.enableCors({
-    origin: '*',
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-    allowedHeaders: 'Content-Type, Authorization, Accept',
+    origin: ['http://localhost:3000', 'http://192.168.42.107'],
+    methods: 'GET,POST',
+    allowedHeaders: 'Content-Type',
     credentials: true,
   });
 

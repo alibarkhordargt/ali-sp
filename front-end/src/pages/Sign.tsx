@@ -17,7 +17,7 @@ import {
   DialogTitle,
   Slide,
 } from '@mui/material';
-import { PictureAsPdf, Description } from '@mui/icons-material'; // Icons for PDF and Excel
+import { PictureAsPdf, Description } from '@mui/icons-material';
 import { TransitionProps } from '@mui/material/transitions';
 import generatePdf from '../utils/generatePdf';
 import generateExcel from '../utils/generateExcel';
@@ -49,8 +49,7 @@ const SignPage: FC = () => {
   };
 
   const handleSign = async () => {
-    const docBase64 = generatePdf(PdfUseCases.Base64, signerInf, null);
-
+    const docBase64 = generatePdf(PdfUseCases.Base64, signerInf);
     const uploadDocBodyParams: UploadDocDto = {
       doc: docBase64,
       nationalId: signerInf.nationalId,
@@ -60,13 +59,14 @@ const SignPage: FC = () => {
     const { gatewayLink }: sendUnsignedDocResDto = await sendUnsignedDoc(
       uploadDocBodyParams,
     ).unwrap();
+
     window.location.href = gatewayLink;
 
     setOpenModal(false);
   };
 
   const handleDownloadPdf = () => {
-    generatePdf(PdfUseCases.Download, signerInf, null);
+    generatePdf(PdfUseCases.Download, signerInf);
   };
 
   const handleDownloadExcel = () => {

@@ -15,7 +15,7 @@ export class EmzagarAuthService {
       return this.token;
     }
 
-    const url = 'https://apisandbox.emzagar.com/auth/get/token';
+    const url = 'http://192.168.42.107:8086/auth/get/token';
 
     try {
       const res = await this.httpService.axiosRef.post<EmzagarAuthResDto>(

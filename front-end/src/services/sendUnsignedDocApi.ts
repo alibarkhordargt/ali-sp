@@ -5,7 +5,7 @@ import { sendUnsignedDocReqDto } from '../types/dtos';
 
 export const sendUnsignedDocApi = createApi({
   reducerPath: 'uploadDocApi',
-  baseQuery: fetchBaseQuery({ baseUrl: 'https://localhost:3001' }),
+  baseQuery: fetchBaseQuery({ baseUrl: 'http://localhost:3001' }),
   tagTypes: ['UploadDoc'],
   endpoints: (builder) => ({
     sendUnsignedDoc: builder.mutation({

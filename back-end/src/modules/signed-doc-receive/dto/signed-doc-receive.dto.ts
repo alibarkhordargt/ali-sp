@@ -1,4 +1,4 @@
-import { IsString } from 'class-validator';
+import { IsNumber, IsString } from 'class-validator';
 
 export class SignedDocReceiveReqDto {
   @IsString()
@@ -7,8 +7,8 @@ export class SignedDocReceiveReqDto {
   @IsString()
   pdf: string;
 
-  @IsString()
-  errorCode: string;
+  @IsNumber()
+  errorCode: number;
 
   @IsString()
   message: string;

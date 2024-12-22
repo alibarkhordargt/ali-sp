@@ -7,8 +7,5 @@ export const storeDoc = async (
   await fs.writeFile(path, docBuffer);
 };
 
-export const renderDoc = async (path: string): Promise<Buffer> => {
-  const docBuffer = await fs.readFile(path);
-
-  return docBuffer;
-};
+export const renderDoc = async (path: string): Promise<Buffer> =>
+  await fs.readFile(path);

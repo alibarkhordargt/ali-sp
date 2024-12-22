@@ -1,12 +1,17 @@
 import { FC, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { Button, Typography } from '@mui/material';
-import { useReceiveSignedDocMutation } from '../services/receiveSignedDocApi'; // your API service
-import generatePdf from '../utils/generatePdf';
+import { useReceiveSignedDocMutation } from '../services/receiveSignedDocApi';
 import PageWrapper from '../components/PageWrapper';
-import { PdfUseCases } from '../types/enums';
 import { PictureAsPdf } from '@mui/icons-material';
 import { receiveSignedDocResDto } from '../types/dtos';
+
+const downloadPdfFile = (docBase64: string) => {
+  const link = document.createElement('a');
+  link.href = `data:application/pdf;base64,${docBase64}`;
+  link.download = 'signed-document.pdf';
+  link.click();
+};
 
 const SuccessPage: FC = () => {
   const { trackId } = useParams();
@@ -18,7 +23,7 @@ const SuccessPage: FC = () => {
         { trackId },
       ).unwrap();
 
-      generatePdf(PdfUseCases.Download, null, docBase64);
+      downloadPdfFile(docBase64);
     }
   }, [receiveSignedDoc, trackId]);
 

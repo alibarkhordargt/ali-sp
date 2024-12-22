@@ -32,15 +32,15 @@ export class GatewayLinkReceiveService {
     { nationalId, phoneNumber: userPhoneNumber }: SignerInf,
     trackId: string,
   ): Promise<string> {
-    const url = 'https://apisandbox.emzagar.com/gateway/link/get';
+    const url = 'http://192.168.42.107:8086/gateway/link/get';
     const getGatewayLinkBodyParams: GetGatewayLinkReqDto = {
       nationalId,
       userPhoneNumber,
       trackId,
       sendSms: true,
       docType: 'DOCUMENT',
-      documentApi: 'https://192.168.61.47:3001/receive-unsigned',
-      callBackUrl: 'https://192.168.61.47:3001/send-signed',
+      documentApi: 'http://192.168.61.47:3001/receive-unsigned',
+      callBackUrl: 'http://192.168.61.47:3001/send-signed',
       certificateDiscount: 100,
       signDiscount: 100,
       apiVersion: '1.1.0',
@@ -49,7 +49,9 @@ export class GatewayLinkReceiveService {
     const bearerToken = await this.getToken();
 
     try {
-      const res = await this.httpService.axiosRef.post<GetGatewayLinkResDto>(
+      const {
+        data: { gatewayLink: gatewayLinkOnDomain },
+      }: { data: GetGatewayLinkResDto } = await this.httpService.axiosRef.post(
         url,
         getGatewayLinkBodyParams,
         {
@@ -59,7 +61,9 @@ export class GatewayLinkReceiveService {
         },
       );
 
-      return res.data.gatewayLink;
+      const gatewayLink = `http://192.168.42.107${gatewayLinkOnDomain.split('.com')[1]}`;
+
+      return gatewayLink;
     } catch (err) {
       error('Error API fetch /gateway/link/get:', err);
       throw new HttpException(
